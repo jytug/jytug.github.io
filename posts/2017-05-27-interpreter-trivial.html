@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Jytug's blog - An interpreter for a trivial imperative language in Haskell</title>
+
+        <!-- bootstrap -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+        <link rel="stylesheet" href="../css/default.css" />
+
+    </head>
+    <body class="container">
+        <div class="row">
+            <div class="col-md-2 col-md-offset-2" id="header">
+                <ul id="navigation">
+                    <li><a href="../">Home</a></li>
+                    <li><a href="../about.html">About</a></li>
+                    <li><a href="../contact.html">Contact</a></li>
+                    <li><a href="../archive.html">Archive</a></li>
+                </ul>
+            </div>
+            <div class="col-md-6" id="content">
+                <h1>An interpreter for a trivial imperative language in Haskell</h1>
+                <div class="info">
+    Posted on May 27, 2017
+    
+</div>
+
+<h2 id="preliminaries">Preliminaries</h2>
+<p>This is a beginners’ tutorial on how to write an interpreter for a <em>really</em> simple imperative language. I wrote it because my friend asked me for some information on where to even begin looking around for such a thing, and I couldn’t redirect him to a specific place, so here we are.</p>
+<p>If you’re in haste, you can already jump to the language’s <a href="#spec">specification</a>.</p>
+<h3 id="what-youll-need">What you’ll need</h3>
+<p>First of all, I require basic knowledge of Haskell and basic understanding of some mathematical concepts. We won’t do any algebraic topology or advanced Haskell programming, however I recommend you take a peek at <a href="http://book.realworldhaskell.org/read/monad-transformers.html">monad transformers</a>. Also, I am assuming you know what a BNF Grammar is.</p>
+<p>We will also use some crazy software which will solve the problem of parsing for us - <code>bnfc</code>. In order to produce Haskell, it requires also <code>alex</code> and <code>happy</code>. You can get all of them from most package managers like apt.</p>
+<h3 id="notation">Notation</h3>
+<p>I’m going to use some convenient notation shortcuts, listed here:</p>
+<ul>
+<li><p>Lambda-notation: \( \lambda x \in X .\varphi(x) \) means a function \( f : X \to Y \) such that \( f(x) = (x) \). We’ll often omit the domain \( X \).</p></li>
+<li><p>Function application: we’ll use the Haskell-ey way of applying funtions to arguments, where <code>f x</code> means the same as <code>f(x)</code> does in math.</p></li>
+</ul>
+<h3 id="what-were-going-to-do">What we’re going to do</h3>
+<h2 id="the-language"><a name="spec"></a> The language</h2>
+<p>The language we’ll be implementing is called <code>Tiny</code> where I come from. We won’t prove its Turing completeness, which some <a href="https://esolangs.org/wiki/Turing_tarpit">madmen</a> might attempt. However this language represents the most basic constructs of imperative programming.</p>
+<h3 id="syntax">Syntax</h3>
+<p><code>Tiny</code>’s syntax contains the following constructs:</p>
+<ul>
+<li><p>Numerals \( n \in \textbf{Num} \) with the following syntax:</p>
+<p><span class="math display">\[ \textbf{Num} \ni n \to 0~|~-1~|~1~|~-2~|~\dots \]</span></p></li>
+<li><p>Variables \( x \in \textbf{Var} \):</p>
+<p><span class="math display">\[ \textbf{Var} \ni x \to \texttt{x}~|~\texttt{y}~|~\dots \]</span></p></li>
+<li><p>Integer expressions \( e \in \textbf{Exp} \):</p>
+<p><span class="math display">\[ \textbf{Exp} \ni e \to n~|~x~|~e_1+e_2~|~e_1*e_2~|~e_1-e_2 \]</span></p></li>
+<li><p>Boolean expressions \( b \in \textbf{BExp} \):</p>
+<p><span class="math display">\[ \textbf{BExp} \ni b \to \texttt{true}~|~\texttt{false}~|~e_1 \geq e_1~|~\texttt{not } b'~|~b_1 \texttt{ and } b_2 \]</span></p></li>
+<li><p>Statements \( S \in \textbf{Stm} \):</p>
+<p><span class="math display">\[ \textbf{Stm} \ni S \to x \texttt{ := } e ~|~\texttt{skip}~|
+~S_1 \texttt{;}S_2 \\ |~ \texttt{if } b \texttt{ then } S_1 \texttt{ else } S_2~|~\texttt{while } b \texttt{ do } S'\]</span></p></li>
+</ul>
+<p>This is it! All <code>Tiny</code> can do is an assignment, an <code>if</code> statement and a <code>while</code> loop. It looks pretty easy for now, especially since we know what all those constructs should <strong>do</strong>. The next question we’ll be facing is: what do those syntactic constructs actually <strong>mean</strong>?</p>
+<h3 id="semantics">Semantics</h3>
+<p>The crucial question here is <em>how do we model a programming language’s behaviour</em>? The correct answer to this question is: it depends on the language! Obviously, a purely functional programming language, like Haskell, is stateless, while an actual imperative language <em>has to have a state</em>. And it’s just the tip of the iceberg.</p>
+<p>In order to avoid this iceberg, we’ll answer a simpler question: what do syntactic constructs of <code>Tiny</code> mean?</p>
+<p>Let’s begin with everything but statements - devising what statements mean is going to be a little more tricky. In order to do that, we need to define what a <strong>state</strong> of the program is. At any given time, a <code>Tiny</code> program’s state is defined by what all variables’ values are. At the beginning none of them are defined and their definition happens at their first assignment.</p>
+<p>This means, that a state can be modelled as a <em>partial function</em> <span class="math display">\[ s \in \textbf{State} =  \textbf{Var} \rightharpoonup \mathbb{Z} \]</span></p>
+<ul>
+<li><p><strong>Numerals</strong>. That’s an easy one. Obviously, \(\texttt{1}\) means \(1\). Hence, the semantic function \(\mathcal{N} : \textbf{Num} \to \mathbb{Z} \) is given by: <span class="math display">\[\mathcal{N}(\texttt{0}) = 0\]</span> <span class="math display">\[\mathcal{N}(\texttt{-1}) = -1\]</span> <span class="math display">\[\mathcal{N}(\texttt{1}) = -1\]</span> <span class="math display">\[ \dots \]</span></p></li>
+<li><p><strong>Variables</strong>. A variable means as much as its current value. This means that a semantic function needs to take the state into account. One way of expressing this is to define the semantic function as the state applied to the variable. <span class="math display">\[ \mathcal{V} : \textbf{Var} \to \textbf{State} \rightharpoonup \mathbb{N}\]</span> <span class="math display">\[ \mathcal{V}(x) = \lambda s . (s x) \]</span></p></li>
+<li><p><strong>Expressions</strong>. The semantic function for expressions can be defined analogously to the one for variables. Some expressions’ values depend on the state, not all of them. Let’s see how this could work:</p></li>
+</ul>
+<p><span class="math display">\[ \mathcal{E}: \textbf{Var} \to \textbf{State} \rightharpoonup \mathbb{N} \]</span> <span class="math display">\[ \mathcal{E} (n) = \lambda s . \mathcal{N}(n) \]</span> <span class="math display">\[ \mathcal{E} (x) = \mathcal{V}(x) \]</span> <span class="math display">\[ \mathcal{E} (e_1 + e_2) = \lambda s . (\mathcal{E}(e_1) s + \mathcal{E}(e_2) s)\]</span> <span class="math display">\[ \mathcal{E} (e_1 * e_2) = \lambda s . (\mathcal{E}(e_1) s * \mathcal{E}(e_2) s)\]</span> <span class="math display">\[ \mathcal{E} (e_1 - e_2) = \lambda s . (\mathcal{E}(e_1) s - \mathcal{E}(e_2) s)\]</span></p>
+<p>Everything looks fine for now. Now, let’s head to the beef - statements.</p>
+
+            </div>
+        </div>
+        <div class="row">
+            <div id="footer" class="col-md-8 col-md-offset-2">
+                Site proudly generated by
+                <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+            </div>
+        </div>
+    </body>
+
+    <!-- bootstrap -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <!-- mathjax -->
+    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+</html>
