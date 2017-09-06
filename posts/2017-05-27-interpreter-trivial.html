@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta http-equiv="x-ua-compatible" content="ie=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Jytug's blog - An interpreter for a trivial imperative language in Haskell</title>
+        <title>Jytug's blog - An interpreter for a trivial imperative language in Haskell, part 1</title>
 
         <!-- bootstrap -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -23,7 +23,7 @@
                 </ul>
             </div>
             <div class="col-md-6" id="content">
-                <h1>An interpreter for a trivial imperative language in Haskell</h1>
+                <h1>An interpreter for a trivial imperative language in Haskell, part 1</h1>
                 <div class="info">
     Posted on May 27, 2017
     
@@ -38,10 +38,14 @@
 <h3 id="notation">Notation</h3>
 <p>I’m going to use some convenient notation shortcuts, listed here:</p>
 <ul>
-<li><p>Lambda-notation: \( \lambda x \in X .\varphi(x) \) means a function \( f : X \to Y \) such that \( f(x) = (x) \). We’ll often omit the domain \( X \).</p></li>
+<li><p>Lambda-notation: \( \lambda x \in X .\varphi(x) \) means a function \( f : X \to Y \) such that \( f(x) = \varphi(x) \). We’ll often omit the domain \( X \).</p></li>
 <li><p>Function application: we’ll use the Haskell-ey way of applying funtions to arguments, where <code>f x</code> means the same as <code>f(x)</code> does in math.</p></li>
+<li><p>Function update: suppose \( f : X \rightharpoonup Y \) is a partial function. By \( f [ x \to y ] \) we’ll denote a function updated at \( x \), i.e. a function given by: <span class="math display">\[f[x \to y] z = \begin{cases} y &amp; \text{if } z = x\\ f z &amp;\text{otherwise} \end{cases} \]</span></p></li>
 </ul>
 <h3 id="what-were-going-to-do">What we’re going to do</h3>
+<p>A programming language is defined by its syntax and semantics. The syntax is usually defined with a context-free grammar, which is the case for <code>Tiny</code>. Note, however, that most languages are not context-free, for instance <a href="http://trevorjim.com/python-is-not-context-free/">Python</a>.</p>
+<p>Like I mentioned before, we will not implement a parser, making use of the context-freeness of <code>Tiny</code>, but we will use a tool to do this for us.</p>
+<p>What will focus on mostly are the language’s semantics. To put it as simple as it gets: program’s semantics are a mathematical model of the computation the program represents.</p>
 <h2 id="the-language"><a name="spec"></a> The language</h2>
 <p>The language we’ll be implementing is called <code>Tiny</code> where I come from. We won’t prove its Turing completeness, which some <a href="https://esolangs.org/wiki/Turing_tarpit">madmen</a> might attempt. However this language represents the most basic constructs of imperative programming.</p>
 <h3 id="syntax">Syntax</h3>
@@ -54,7 +58,7 @@
 <li><p>Integer expressions \( e \in \textbf{Exp} \):</p>
 <p><span class="math display">\[ \textbf{Exp} \ni e \to n~|~x~|~e_1+e_2~|~e_1*e_2~|~e_1-e_2 \]</span></p></li>
 <li><p>Boolean expressions \( b \in \textbf{BExp} \):</p>
-<p><span class="math display">\[ \textbf{BExp} \ni b \to \texttt{true}~|~\texttt{false}~|~e_1 \geq e_1~|~\texttt{not } b'~|~b_1 \texttt{ and } b_2 \]</span></p></li>
+<p><span class="math display">\[ \textbf{BExp} \ni b \to \texttt{true}~|~\texttt{false}~|~e_1 \leq e_1~|~\texttt{not } b'~|~b_1 \texttt{ and } b_2 \]</span></p></li>
 <li><p>Statements \( S \in \textbf{Stm} \):</p>
 <p><span class="math display">\[ \textbf{Stm} \ni S \to x \texttt{ := } e ~|~\texttt{skip}~|
 ~S_1 \texttt{;}S_2 \\ |~ \texttt{if } b \texttt{ then } S_1 \texttt{ else } S_2~|~\texttt{while } b \texttt{ do } S'\]</span></p></li>
@@ -71,7 +75,32 @@
 <li><p><strong>Expressions</strong>. The semantic function for expressions can be defined analogously to the one for variables. Some expressions’ values depend on the state, not all of them. Let’s see how this could work:</p></li>
 </ul>
 <p><span class="math display">\[ \mathcal{E}: \textbf{Var} \to \textbf{State} \rightharpoonup \mathbb{N} \]</span> <span class="math display">\[ \mathcal{E} (n) = \lambda s . \mathcal{N}(n) \]</span> <span class="math display">\[ \mathcal{E} (x) = \mathcal{V}(x) \]</span> <span class="math display">\[ \mathcal{E} (e_1 + e_2) = \lambda s . (\mathcal{E}(e_1) s + \mathcal{E}(e_2) s)\]</span> <span class="math display">\[ \mathcal{E} (e_1 * e_2) = \lambda s . (\mathcal{E}(e_1) s * \mathcal{E}(e_2) s)\]</span> <span class="math display">\[ \mathcal{E} (e_1 - e_2) = \lambda s . (\mathcal{E}(e_1) s - \mathcal{E}(e_2) s)\]</span></p>
+<ul>
+<li><strong>Boolean expressions</strong>. Like in the case of integer expressions, the semantic function will indicate a boolean expression’s value, from the set \( \{ \mathrm{tt}, \mathrm{ff} \} \). Which represent respectively truth and falsehood.</li>
+</ul>
+<p><span class="math display">\[ \mathcal{B} : \textbf{BExp} \to \textbf{State} \rightharpoonup \{ \mathrm{tt}, \mathrm{ff} \}\]</span> <span class="math display">\[ \mathcal{B} (\texttt{true}) = \lambda s . \mathrm{tt} \]</span> <span class="math display">\[ \mathcal{B} (\texttt{false}) = \lambda s . \mathrm{ff} \]</span> <span class="math display">\[ \mathcal{B} (e_1 \leq e_2) = \lambda s . \left( \mathcal{E}(e_1) s \leq \mathcal{E}(e_2) s \right)  \]</span> <span class="math display">\[ \mathcal{B} (\texttt{not } b') = \lambda s . \left( \neg \mathcal{B}(b') s \right) \]</span></p>
 <p>Everything looks fine for now. Now, let’s head to the beef - statements.</p>
+<ul>
+<li><strong>Statements</strong>. We won’t define a semantic function for statements. What we’ll do instead is define how a statement <em>changes</em> the state. This approach is called <em>small step computational semantics</em> (<a href="http://fsl.cs.illinois.edu/images/7/74/CS522-Spring-2011-PL-book-smallstep.pdf">see more</a>).<br />
+We will use the following logical notation to denote structural rules:<br />
+<span class="math display">\[\frac{C_1, \dots, C_k}{C}\]</span> This can be read as <em>assuming all \(C_1, , C_k \), then \( C \) follows</em>.<br />
+A configuration of the program is a pair \( \langle \texttt{stm}, s\rangle \) or a single \( s \), where \( \texttt{stm} \) is the next statement to execute and \( s \) is the current state. The configurations consisting of a lone state are considered <em>final</em> (i.e. there’s nothing to do).<br />
+Now, define transitions between configurations. <span class="math display">\[\left \langle x \texttt{ := } e, s \right \rangle \Rightarrow s\left[x \to \mathcal{E}(e) s\right]\]</span> <span class="math display">\[\left \langle \texttt{skip }, s \right \rangle \Rightarrow s\]</span> <span class="math display">\[\frac
+{\left \langle S_1, s \right \rangle \Rightarrow s', ~~ \left \langle S_2, s' \right \rangle \Rightarrow s''}
+{\left \langle S_1\texttt{;}S_2, s \right \rangle \Rightarrow s''}\]</span> <span class="math display">\[\frac
+{\mathcal{B}(b) s = \mathrm{tt}, ~~ \left \langle S_1, s \right \rangle \Rightarrow s'}
+{\left \langle \texttt{if } b \texttt{ then } S_1 \texttt{ else } S_2, s \right \rangle \Rightarrow s'}\]</span> <span class="math display">\[\frac
+{\mathcal{B}(b) s = \mathrm{ff}}
+{\left \langle \texttt{while } b \texttt{ do } S, s \right \rangle \Rightarrow s}
+\]</span> <span class="math display">\[\frac
+{\mathcal{B}(b) s = \mathrm{tt}, ~~
+\left \langle S, s \right \rangle \Rightarrow s', ~~
+\left \langle \texttt{while } b \texttt{ do } S, s' \right \rangle \Rightarrow s''
+}
+{\left \langle \texttt{while } b \texttt{ do } S, s \right \rangle \Rightarrow s''}
+\]</span></li>
+</ul>
+<p>This is it! Now we have a mathematical model for what a program written in <code>Tiny</code> might mean. Time to roll up our sleeves and head to the implementation.</p>
 
             </div>
         </div>
