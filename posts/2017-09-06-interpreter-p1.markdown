@@ -1,5 +1,5 @@
 ---
-title: An interpreter for a trivial imperative language in Haskell, part 1
+title: An interpreter for a trivial imperative language, part 1 (semantics)
 ---
 
 ## Preliminaries
@@ -9,21 +9,24 @@ my friend asked me for some information on where to even begin
 looking around for such a thing, and I couldn't redirect him
 to a specific place, so here we are.
 
-If you're in haste, you can already jump to the language's
-[specification](#spec).
+This is the first part, covering mostly the theoretical concepts.
+In part two, I will provide a step-by-step tutorial for implementing
+the interpreter in Haskell.
 
 ### What you'll need
-First of all, I require basic knowledge of Haskell and basic
-understanding of some mathematical concepts. We won't do any
-algebraic topology or advanced Haskell programming, however I
+First of all, I require basic knowledge of Haskell and some
+understanding of fundamental mathematical concepts, like functions.
+We won't do any category theory or advanced programming, however I
 recommend you take a peek at
 [monad transformers](http://book.realworldhaskell.org/read/monad-transformers.html).
-Also, I am assuming you know what a BNF Grammar is.
+Also, I am assuming you know what a
+[BNF Grammar](http://www.cs.man.ac.uk/~pjj/bnf/bnf.html)
+is.
 
 We will also use some crazy software which will solve the
 problem of parsing for us - `bnfc`. In order to produce
 Haskell, it requires also `alex` and `happy`. You can get
-all of them from most package managers like apt.
+all of them from most package managers, including apt.
 
 ### Notation
 I'm going to use some convenient notation shortcuts, listed
@@ -35,7 +38,7 @@ We'll often omit the domain \\( X \\).
 
 * Function application: we'll use the Haskell-ey way of
 applying funtions to arguments, where `f x` means the same
-as `f(x)` does in math.
+as `f(x)`.
 
 * Function update: suppose \\( f : X \\rightharpoonup Y \\) is
 a partial function. By \\( f [ x \\to y ] \\) we'll denote a
@@ -46,15 +49,14 @@ $$f[x \to y] z = \begin{cases} y & \text{if } z = x\\ f z &\text{otherwise} \end
 
 A programming language is defined by its syntax and semantics.
 The syntax is usually defined with a context-free grammar,
-which is the case for `Tiny`. Note, however, that most
+which is the case for our working example. Note, however, that most
 languages are not context-free, for instance
 [Python](http://trevorjim.com/python-is-not-context-free/).
 
 Like I mentioned before, we will not implement a parser, making
-use of the context-freeness of `Tiny`, but we will use a tool
-to do this for us.
+use of existing tools.
 
-What will focus on mostly are the language's semantics.
+What we will focus on mostly are the language's semantics.
 To put it as simple as it gets: program's semantics are
 a mathematical model of the computation the program
 represents.
@@ -63,11 +65,11 @@ represents.
 The language we'll be implementing is called `Tiny` where I
 come from. We won't prove its Turing completeness, which some
 [madmen](https://esolangs.org/wiki/Turing_tarpit) might attempt.
-However this language represents the most basic constructs
+However this language represents all of the most basic constructs
 of imperative programming.
 
 ### Syntax
-`Tiny`'s syntax contains the following constructs:
+`Tiny`'s syntax consists of the following clauses:
 
 * Numerals \\( n \\in \\textbf{Num} \\) with the following syntax:
     
@@ -100,30 +102,40 @@ syntactic constructs actually **mean**?
 The crucial question here is *how do we model a programming
 language's behaviour*? The correct answer to this question
 is: it depends on the language! Obviously, a purely functional
-programming language, like Haskell, is stateless, while an
-actual imperative language *has to have a state*. And it's just
-the tip of the iceberg.
+language, like Haskell, would not require a state to be a part
+of the semantics, unlike any of the imperative languages known
+to man.
 
-In order to avoid this iceberg, we'll answer a simpler question:
+In order to avoid a lengthy discussion on various approaches to
+defining semantics, we'll answer a simpler question:
 what do syntactic constructs of `Tiny` mean?
 
-Let's begin with everything but statements - devising what
-statements mean is going to be a little more tricky. In
-order to do that, we need to define what a **state** of the
+Let's begin with everything but statements. Expressions' values
+depend on what has happend in the code before their evaluation,
+and might even cause some errors, like `undeclared variable` or
+`division by zero`. In order to devise the semantics of expressions,
+first we need to define what a **state** of the
 program is. At any given time, a `Tiny` program's state is defined
 by what all variables' values are. At the beginning none of
-them are defined and their definition happens at their
-first assignment.
+them are defined and they stop being undefined when something is
+assigned to them for the first time.
 
-This means, that a state can be modelled as a *partial function*
+This means that a state can be modelled as a *partial function*
 $$ s \in \textbf{State} =  \textbf{Var} \rightharpoonup \mathbb{Z} $$
+
+Recall that a partial function is a function that might not be
+defined everywhere on its domain, in other words it is an entire function
+
+$$ s : \textbf{Var} \to \mathbb{Z} \cup \{\perp\} $$
+
+where \\( s ~ x = \\perp \\) means that \\( s \\) is undefined on \\( x \\).
 
 * **Numerals**. That's an easy one. Obviously,
 \\(\\texttt{1}\\) means \\(1\\). Hence, the semantic function
 \\(\\mathcal{N} : \\textbf{Num} \\to \\mathbb{Z} \\) is given by:
 $$\mathcal{N}(\texttt{0}) = 0$$
 $$\mathcal{N}(\texttt{-1}) = -1$$
-$$\mathcal{N}(\texttt{1}) = -1$$
+$$\mathcal{N}(\texttt{1}) = 1$$
 $$ \dots $$
 
 * **Variables**. A variable means as much as its current value.
@@ -144,6 +156,10 @@ $$ \mathcal{E} (x) = \mathcal{V}(x) $$
 $$ \mathcal{E} (e_1 + e_2) = \lambda s . (\mathcal{E}(e_1) s + \mathcal{E}(e_2) s)$$
 $$ \mathcal{E} (e_1 * e_2) = \lambda s . (\mathcal{E}(e_1) s * \mathcal{E}(e_2) s)$$
 $$ \mathcal{E} (e_1 - e_2) = \lambda s . (\mathcal{E}(e_1) s - \mathcal{E}(e_2) s)$$
+
+>**Note**: We implicitly assume that errors propagate, i.e. if 
+ \\(  V(e_1) = \\perp \\), then so is \\( V(e_1 + e_2 \\).
+ As you can imagine, in such situations monads come in very handy.
 
 * **Boolean expressions**. Like in the case of integer expressions,
 the semantic function will indicate a boolean expression's value,
@@ -173,8 +189,13 @@ A configuration of the program is a pair
 \\( \\langle \\texttt{stm}, s\\rangle \\) or a single \\( s \\),
 where \\( \\texttt{stm} \\) is the next statement to execute
 and \\( s \\) is the current state. The configurations consisting
-of a lone state are considered *final* (i.e. there's nothing to do).\
-Now, define transitions between configurations.
+of a lone state are considered *final* (i.e. there's nothing to be done).\
+Now, we define transitions between configurations.
+A transition \\( (stm, s) \\Rightarrow s' \\), in its essence,
+can be read as: "if we are in state s and execute the statement
+\\( stm \\), then the state changes to \\( s' \\)". Following this
+intuition, it is not difficult to devise the transitions for
+our statements:
 $$\left \langle x \texttt{ := } e, s \right \rangle \Rightarrow s\left[x \to \mathcal{E}(e) s\right]$$
 $$\left \langle \texttt{skip }, s \right \rangle \Rightarrow s$$
 $$\frac
@@ -195,6 +216,7 @@ $$\frac
 {\left \langle \texttt{while } b \texttt{ do } S, s \right \rangle \Rightarrow s''}
 $$
 
-This is it! Now we have a mathematical model for what
-a program written in `Tiny` might mean. Time to roll up
-our sleeves and head to the implementation.
+And that would be all! We have constructed a very simple mathematical model
+for the semantics of `Tiny`'s semantics. In the next post, we will
+use this model to implement an actual interpreter for this language,
+possibly using some cheats for I/O.
