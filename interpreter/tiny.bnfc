@@ -1,0 +1,25 @@
+Program.   Prog ::= Stm ;
+
+ENum.   Exp2    ::= Integer ;
+EVar.   Exp2    ::= Ident ;
+EAdd.   Exp     ::= Exp "+" Exp1 ;
+ESub.   Exp     ::= Exp "-" Exp1 ;
+EMul.   Exp1    ::= Exp1 "*" Exp2 ;
+
+coercions Exp 2 ;
+
+BTrue.  BExp    ::= "true" ;
+BFalse. BExp    ::= "false" ;
+BLeq.   BExp    ::= Exp "<=" Exp ;
+BNeg.   BExp    ::= "not" BExp ;
+BAnd.   BExp    ::= BExp "and" BExp ;
+
+SSkip.  Stm     ::= "skip" ;
+SAss .  Stm     ::= Ident ":=" Exp ;
+SIfel.  Stm     ::= "if" BExp "then" Stm "else" Stm ;
+SWhile. Stm     ::= "while" BExp "do" Stm ;
+SPrint. Stm     ::= "print" Exp ;
+SBlock. Stm     ::= "begin" [Stm] "end" ;
+
+separator Stm ";" ;
+terminator Stm "" ;

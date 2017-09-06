@@ -54,7 +54,7 @@ div#footer {
     color: #555;
     font-size: 12px;
     margin-top: 30px;
-    padding: 12px 0px 12px 0px;
+    padding: 12px 10px 12px 0px;
     text-align: right;
 }
 
@@ -90,4 +90,8 @@ ul.nice-list li {
 
 ul.nice-list li:hover {
     border-left: 3px solid black;
+}
+
+p.center {
+    text-align:center;
 }

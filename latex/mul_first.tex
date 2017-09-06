@@ -1,0 +1,43 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Welcome to Overleaf --- just edit your LaTeX on the left,
+% and we'll compile it for you on the right. If you give
+% someone the link to this page, they can edit at the same
+% time. See the help menu above for more info. Enjoy!
+%
+% Note: you can export the pdf to see the result at full
+% resolution.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MergeSort-RecursionTree
+% Manuel Kirsch
+\documentclass[a4paper,landscape]{scrartcl}
+%%%<
+\usepackage{verbatim}
+\usepackage[active,tightpage]{preview}
+%\PreviewEnvironment{tikzpicture}
+\setlength\PreviewBorder{5pt}%
+%%%>
+
+\begin{comment}
+:Title:  Merge sort recursion tree
+
+\end{comment}
+\usepackage{fancybox}
+\usepackage{tikz}
+
+\title{MergeSort-RecursionTree}
+\author{Manuel Kirsch}
+\date{}
+\begin{document}
+\begin{preview}
+\begin{tikzpicture}[level/.style={sibling distance=60mm/#1}]
+\node[circle, draw] {EMul}
+    child { node[circle, draw] {EAdd}
+      child { node[circle, draw] {EInt 1} }
+      child { node[circle, draw] {EInt 2} } }
+    child { node[circle, draw] {EInt 3} }
+;
+\end{tikzpicture}
+\end{preview}
+\end{document}
