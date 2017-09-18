@@ -34,17 +34,29 @@ evalExp (EAdd e1 e2) = do
     n2 <- evalExp e2
     return $ n1 + n2
 
+evalExp (ESub e1 e2) = do
+    n1 <- evalExp e1
+    n2 <- evalExp e2
+    return $ n1 - n2
+
 evalExp (EMul e1 e2) = do
     n1 <- evalExp e1
     n2 <- evalExp e2
     return $ n1 * n2
 
-evalExp (EMul e1 e2) = do
+evalExp (EDiv e1 e2) = do
     n1 <- evalExp e1
     n2 <- evalExp e2
     if n2 == 0
         then throwError "attempted division by zero"
         else return $ n1 `quot` n2
+
+evalExp (EMod e1 e2) = do
+    n1 <- evalExp e1
+    n2 <- evalExp e2
+    if n2 == 0
+        then throwError "attempted division by zero"
+        else return $ n1 `mod` n2
 
 -- boolean expressions
 evalBExp :: BExp -> InterpreterM Bool

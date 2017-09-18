@@ -1,10 +1,12 @@
 Program.   Prog ::= Stm ;
 
-ENum.   Exp2    ::= Integer ;
-EVar.   Exp2    ::= Ident ;
 EAdd.   Exp     ::= Exp "+" Exp1 ;
 ESub.   Exp     ::= Exp "-" Exp1 ;
 EMul.   Exp1    ::= Exp1 "*" Exp2 ;
+EDiv.   Exp1    ::= Exp1 "/" Exp2 ;
+EMod.   Exp1    ::= Exp1 "%" Exp2 ;
+ENum.   Exp2    ::= Integer ;
+EVar.   Exp2    ::= Ident ;
 
 coercions Exp 2 ;
 
@@ -19,7 +21,7 @@ SAss .  Stm     ::= Ident ":=" Exp ;
 SIfel.  Stm     ::= "if" BExp "then" Stm "else" Stm ;
 SWhile. Stm     ::= "while" BExp "do" Stm ;
 SPrint. Stm     ::= "print" Exp ;
-SBlock. Stm     ::= "begin" [Stm] "end" ;
+SBlock. Stm     ::= "{" [Stm] "}" ;
 
 separator Stm ";" ;
 terminator Stm "" ;

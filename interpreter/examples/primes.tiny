@@ -1,0 +1,21 @@
+{
+    p := 2;
+    while p <= 500 do
+    {
+        i := 2;
+        prime := 1;
+        while i <= p - 1 do {
+            if (p % i) <= 0 then
+                prime := 0
+            else
+                skip
+            i := i + 1
+        }
+        if prime <= 0 then
+            skip
+        else
+            print p
+        p := p + 1
+    }
+}
+
