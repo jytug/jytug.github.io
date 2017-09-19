@@ -158,7 +158,7 @@ $$ \mathcal{E} (e_1 * e_2) = \lambda s . (\mathcal{E}(e_1) s * \mathcal{E}(e_2) 
 $$ \mathcal{E} (e_1 - e_2) = \lambda s . (\mathcal{E}(e_1) s - \mathcal{E}(e_2) s)$$
 
 >**Note**: We implicitly assume that errors propagate, i.e. if 
- \\(  V(e_1) = \\perp \\), then so is \\( V(e_1 + e_2 \\).
+ \\(  V(e_1) = \\perp \\), then so is \\( V(e_1 + e_2) \\).
  As you can imagine, in such situations monads come in very handy.
 
 * **Boolean expressions**. Like in the case of integer expressions,

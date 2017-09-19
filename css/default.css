@@ -5,6 +5,7 @@ body {
 }
 
 a {
+    text-decoration:none;
     color: dimgray;
 }
 
@@ -20,6 +21,34 @@ h1, h2, h3, h4, h5, h6 {
 p, div {
     font-family: 'Open Sans';
     color: black;
+}
+
+blockquote {
+    font-size: 14px;
+    background-color:#F0F0F0;
+    border-left: 5px solid #9F9F9F;
+}
+
+code {
+    font-family: Monaco, Consolas, "Andale Mono", "DejaVu Sans Mono", monospace;
+    font-size: 95%;
+    line-height: 140%;
+    white-space: pre;
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -o-pre-wrap;
+}
+
+
+
+pre {
+    font-family: "Courier 10 Pitch", Courier, monospace;
+    font-size: 95%;
+    line-height: 140%;
+    white-space: pre;
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -o-pre-wrap;
 }
 
 div#header ul {
@@ -89,9 +118,18 @@ ul.nice-list li {
 }
 
 ul.nice-list li:hover {
-    border-left: 3px solid black;
+    border-left: 2px solid black;
 }
 
 p.center {
+    text-align:center;
+}
+
+.icon {
+    cursor: pointer;
+    font-size:25pt;
+}
+.button-container {
+    width:100%;
     text-align:center;
 }
